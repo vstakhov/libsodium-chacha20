@@ -29,14 +29,14 @@ int crypto_secretbox_chacha20poly1305 (unsigned char *c, const unsigned char *m,
 		unsigned long long mlen, const unsigned char *n, const unsigned char *k)
 {
 	int i;
-	unsigned char subkey[32];
+	unsigned char subkey[64];
 	if (mlen < 16)
 		return -1;
-	/* Km = E({0}, n, k) */
-	sodium_memzero (subkey, 32);
-	crypto_stream_chacha20 (subkey, 32, n, k);
+	/* Kt = E({0}, n, k) */
+	sodium_memzero (subkey, 64);
+	crypto_stream_chacha20 (subkey, 64, n, k);
 
-	crypto_stream_chacha20_xor (c + 16, m + 16, mlen - 16, n, k);
+	crypto_stream_chacha20_xor (c + 16, m + 16, mlen - 16, n, subkey + 32);
 	crypto_onetimeauth_poly1305 (c, c + 16, mlen - 16, subkey);
 
 	return 0;
@@ -47,19 +47,20 @@ int crypto_secretbox_chacha20poly1305_open (unsigned char *m,
 		const unsigned char *k)
 {
 	int i;
-	unsigned char subkey[32];
+	unsigned char subkey[64];
 	if (clen < 16)
 		return -1;
 
-	sodium_memzero (subkey, 32);
-	crypto_stream_chacha20 (subkey, 32, n, k);
+	sodium_memzero (subkey, 64);
+	crypto_stream_chacha20 (subkey, 64, n, k);
 
 	if (crypto_onetimeauth_poly1305_verify (c, c + 16, clen - 16, subkey)
 			!= 0)
 		return -1;
 
-	crypto_stream_chacha20_xor (m + 16, c + 16, clen - 16, n, k);
+	crypto_stream_chacha20_xor (m + 16, c + 16, clen - 16, n, subkey + 32);
 	for (i = 0; i < 16; ++i)
 		m[i] = 0;
+
 	return 0;
 }
