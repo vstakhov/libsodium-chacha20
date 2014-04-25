@@ -33,7 +33,10 @@ LINK_DIRECTORIES("${LIBSODIUM_PATH}")
 INCLUDE_DIRECTORIES("${CMAKE_SOURCE_DIR}/include")
 
 SET(LIBSRC src/crypto_stream/chacha20/ref/chacha.c
-		   src/crypto_stream/chacha20/stream_chacha20_api.c)
+		   src/crypto_stream/chacha20/ref/stream_chacha20_ref.c
+		   src/crypto_stream/chacha20/stream_chacha20_api.c
+		   src/crypto_stream/try.c)
+
 ADD_LIBRARY(sodium-chacha20 SHARED ${LIBSRC})
 
 TARGET_LINK_LIBRARIES(sodium-chacha20 sodium)
