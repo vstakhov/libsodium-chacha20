@@ -42,3 +42,6 @@ SET(LIBSRC src/crypto_stream/chacha20/ref/chacha.c
 ADD_LIBRARY(sodium-chacha20 SHARED ${LIBSRC})
 
 TARGET_LINK_LIBRARIES(sodium-chacha20 sodium)
+
+ADD_EXECUTABLE(secretbox_test test/secretbox_test.c)
+TARGET_LINK_LIBRARIES(secretbox_test sodium-chacha20 sodium)
