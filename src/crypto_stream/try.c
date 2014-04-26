@@ -3,16 +3,39 @@
 * D. J. Bernstein
 * Public domain.
 */
-
+#include <stddef.h>
+#include <stddef.h>
 #include <stdlib.h>
+#include <stdint.h>
+#include <string.h>
+#include <limits.h>
+
 #include "crypto_stream_chacha20.h"
 
 unsigned char
 *alignedcalloc (unsigned long long len)
 {
-	void *ptr;
-	posix_memalign(&ptr, 16, len);
-	return ptr;
+	unsigned char *aligned;
+	unsigned char *unaligned;
+	size_t         i;
+
+	if (SIZE_MAX - (size_t) 256U < len ||
+			(unaligned = (unsigned char *) malloc(len + (size_t) 256U)) == NULL) {
+		return NULL;
+	}
+#ifdef HAVE_ARC4RANDOM_BUF
+	(void) i;
+	arc4random_buf(unaligned, len + (size_t) 256U);
+#else
+	for (i = (size_t) 0U; i < len + (size_t) 256U; ++i) {
+		unaligned[i] = (unsigned char) rand();
+	}
+#endif
+	aligned = unaligned + 64;
+	aligned += (ptrdiff_t) 63 & (-(ptrdiff_t) aligned);
+	memset(aligned, 0, len);
+
+	return aligned;
 }
 
 #define crypto_stream crypto_stream_chacha20

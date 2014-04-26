@@ -34,11 +34,16 @@
 #include "crypto_secretbox_chacha20poly1305.h"
 
 extern const char *chacha20_checksum_compute (void);
+extern void chacha20_preallocate (void);
+extern void chacha20_allocate (void);
 
 int
 main (int argc, char **argv)
 {
 	const char *cksum;
+
+	chacha20_allocate ();
+	chacha20_preallocate ();
 	cksum = chacha20_checksum_compute ();
 
 	printf ("Got chacha20 cksum: %s\n", cksum);
