@@ -46,7 +46,7 @@ crypto_stream_chacha20 (
 }
 
 int
-crypto_xor_chacha20 (
+crypto_stream_chacha20_xor (
 		unsigned char *c,
 		const unsigned char *m,
 		unsigned long long mlen,

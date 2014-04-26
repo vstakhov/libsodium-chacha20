@@ -7,7 +7,13 @@
 #include <stdlib.h>
 #include "crypto_stream_chacha20.h"
 
-extern unsigned char *alignedcalloc (unsigned long long);
+unsigned char
+*alignedcalloc (unsigned long long len)
+{
+	void *ptr;
+	posix_memalign(&ptr, 16, len);
+	return ptr;
+}
 
 #define crypto_stream crypto_stream_chacha20
 #define crypto_stream_xor crypto_stream_chacha20_xor
