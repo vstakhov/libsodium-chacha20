@@ -35,6 +35,14 @@
 #include "crypto_stream_chacha20.h"
 #include "crypto_secretbox_chacha20poly1305.h"
 
+sig_atomic_t got_alarm;
+
+static void
+alrm_handler (int signo)
+{
+	got_alarm = 1;
+}
+
 static void
 test_crypto_stream (void)
 {
@@ -92,14 +100,114 @@ test_crypto_secretbox (void)
 			m + crypto_secretbox_chacha20poly1305_ZEROBYTES, sizeof (test_str));
 	printf ("Got secretbox decryption: %s (%s)\n",
 			m + crypto_secretbox_chacha20poly1305_ZEROBYTES, out);
+
+	return 0;
 }
+
+static long
+test_crypto_secretbox_time (int blen, int seconds)
+{
+	unsigned char k[crypto_stream_chacha20_KEYBYTES];
+	unsigned char n[crypto_stream_chacha20_NONCEBYTES];
+	unsigned char *c, *m;
+	long cycles = 0;
+
+	blen += crypto_secretbox_chacha20poly1305_ZEROBYTES;
+	posix_memalign ((void **)&c, 16, blen);
+	posix_memalign ((void **)&m, 16, blen);
+	randombytes_buf (m, blen);
+	memset (m, 0, crypto_secretbox_chacha20poly1305_ZEROBYTES);
+
+	randombytes_buf (k, sizeof (k));
+	randombytes_buf (n, sizeof (n));
+
+	alarm (seconds);
+
+	while (!got_alarm) {
+		crypto_secretbox_chacha20poly1305 (c, m, blen, n, k);
+		if (crypto_secretbox_chacha20poly1305_open (m, c, blen, n, k) == -1) {
+			return -1;
+		}
+		cycles ++;
+	}
+
+	got_alarm = 0;
+	return cycles;
+}
+
+static long
+test_crypto_secretbox_salsa_time (int blen, int seconds)
+{
+	unsigned char k[crypto_secretbox_KEYBYTES];
+	unsigned char n[crypto_secretbox_NONCEBYTES];
+	unsigned char *c, *m;
+	long cycles = 0;
+
+	blen += crypto_secretbox_ZEROBYTES;
+	posix_memalign ((void **)&c, 16, blen);
+	posix_memalign ((void **)&m, 16, blen);
+	randombytes_buf (m, blen);
+	memset (m, 0, crypto_secretbox_ZEROBYTES);
+
+	randombytes_buf (k, sizeof (k));
+	randombytes_buf (n, sizeof (n));
+
+	alarm (seconds);
+
+	while (!got_alarm) {
+		crypto_secretbox (c, m, blen, n, k);
+		if (crypto_secretbox_open (m, c, blen, n, k) == -1) {
+			return -1;
+		}
+		cycles ++;
+	}
+
+	got_alarm = 0;
+	return cycles;
+}
+
+struct tres {
+	int bsize;
+	long cycles_box_chacha;
+	long cycles_box_salsa;
+};
 
 int
 main (int argc, char **argv)
 {
+	int i;
+	struct tres tr[] = {
+		{32, 0, 0},
+		{64, 0, 0},
+		{128, 0, 0},
+		{512, 0, 0},
+		{1024, 0, 0},
+		{4096, 0, 0},
+		{8192, 0, 0},
+		{32768, 0, 0},
+		{65536, 0, 0}
+	};
+
 	test_crypto_stream ();
 	if (test_crypto_secretbox () == -1) {
 		return EXIT_FAILURE;
 	}
+
+	for (i = 0; i < sizeof(tr) / sizeof (tr[0]); i ++) {
+		signal (SIGALRM, alrm_handler);
+		printf ("Testing chacha20 cryptobox for %d bytes for 3 seconds: ",
+				tr[i].bsize);
+		tr[i].cycles_box_chacha = test_crypto_secretbox_time (tr[i].bsize, 3);
+		printf ("%ld operations\n", tr[i].cycles_box_chacha);
+	}
+	printf ("\n");
+	for (i = 0; i < sizeof(tr) / sizeof (tr[0]); i ++) {
+		signal (SIGALRM, alrm_handler);
+		printf ("Testing salsa20 cryptobox for %d bytes for 3 seconds: ",
+				tr[i].bsize);
+		tr[i].cycles_box_salsa = test_crypto_secretbox_salsa_time (tr[i].bsize, 3);
+		printf ("%ld operations\n", tr[i].cycles_box_salsa);
+	}
+
 	return 0;
 }
