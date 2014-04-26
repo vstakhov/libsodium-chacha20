@@ -111,6 +111,7 @@ test_crypto_secretbox_time (int blen, int seconds)
 	unsigned char n[crypto_stream_chacha20_NONCEBYTES];
 	unsigned char *c, *m;
 	long cycles = 0;
+	int64_t *nn;
 
 	blen += crypto_secretbox_chacha20poly1305_ZEROBYTES;
 	posix_memalign ((void **)&c, 16, blen);
@@ -120,6 +121,7 @@ test_crypto_secretbox_time (int blen, int seconds)
 
 	randombytes_buf (k, sizeof (k));
 	randombytes_buf (n, sizeof (n));
+	nn = (int64_t*)n;
 
 	alarm (seconds);
 
@@ -128,6 +130,7 @@ test_crypto_secretbox_time (int blen, int seconds)
 		if (crypto_secretbox_chacha20poly1305_open (m, c, blen, n, k) == -1) {
 			return -1;
 		}
+		(*nn) ++;
 		cycles ++;
 	}
 
@@ -141,6 +144,7 @@ test_crypto_secretbox_salsa_time (int blen, int seconds)
 	unsigned char k[crypto_secretbox_KEYBYTES];
 	unsigned char n[crypto_secretbox_NONCEBYTES];
 	unsigned char *c, *m;
+	int64_t *nn;
 	long cycles = 0;
 
 	blen += crypto_secretbox_ZEROBYTES;
@@ -151,6 +155,7 @@ test_crypto_secretbox_salsa_time (int blen, int seconds)
 
 	randombytes_buf (k, sizeof (k));
 	randombytes_buf (n, sizeof (n));
+	nn = (int64_t*)n;
 
 	alarm (seconds);
 
@@ -159,6 +164,7 @@ test_crypto_secretbox_salsa_time (int blen, int seconds)
 		if (crypto_secretbox_open (m, c, blen, n, k) == -1) {
 			return -1;
 		}
+		(*nn) ++;
 		cycles ++;
 	}
 
