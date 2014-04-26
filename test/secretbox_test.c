@@ -61,10 +61,45 @@ test_crypto_stream (void)
 	printf ("Got chacha20 decryption: %s (%s)\n", m, out);
 }
 
+static int
+test_crypto_secretbox (void)
+{
+	unsigned char k[crypto_stream_chacha20_KEYBYTES];
+	unsigned char n[crypto_stream_chacha20_NONCEBYTES];
+	unsigned char m[128], c[128];
+	char out[256];
+	const char test_str[] = "test chacha20";
+	size_t clen = sizeof (test_str) + crypto_secretbox_chacha20poly1305_ZEROBYTES;
+
+	memset (m, 0, crypto_secretbox_chacha20poly1305_ZEROBYTES);
+	memcpy (m + crypto_secretbox_chacha20poly1305_ZEROBYTES,
+			test_str, sizeof (test_str));
+
+	randombytes_buf (k, sizeof (k));
+	randombytes_buf (n, sizeof (n));
+
+	crypto_secretbox_chacha20poly1305 (c, m, clen, n, k);
+
+	sodium_bin2hex (out, sizeof (out), c, clen);
+
+	printf ("Got secretbox encryption: %s\n", out);
+
+	if (crypto_secretbox_chacha20poly1305_open (m, c, clen, n, k) == -1) {
+		return -1;
+	}
+
+	sodium_bin2hex (out, sizeof (out),
+			m + crypto_secretbox_chacha20poly1305_ZEROBYTES, sizeof (test_str));
+	printf ("Got secretbox decryption: %s (%s)\n",
+			m + crypto_secretbox_chacha20poly1305_ZEROBYTES, out);
+}
+
 int
 main (int argc, char **argv)
 {
 	test_crypto_stream ();
-
+	if (test_crypto_secretbox () == -1) {
+		return EXIT_FAILURE;
+	}
 	return 0;
 }
