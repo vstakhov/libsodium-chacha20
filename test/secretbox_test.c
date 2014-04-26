@@ -175,7 +175,7 @@ struct tres {
 int
 main (int argc, char **argv)
 {
-	int i;
+	int i, seconds = 3;
 	struct tres tr[] = {
 		{32, 0, 0},
 		{64, 0, 0},
@@ -188,6 +188,10 @@ main (int argc, char **argv)
 		{65536, 0, 0}
 	};
 
+	if (argc > 1) {
+		seconds = strtoul (argv[1], NULL, 10);
+	}
+
 	test_crypto_stream ();
 	if (test_crypto_secretbox () == -1) {
 		return EXIT_FAILURE;
@@ -195,18 +199,28 @@ main (int argc, char **argv)
 
 	for (i = 0; i < sizeof(tr) / sizeof (tr[0]); i ++) {
 		signal (SIGALRM, alrm_handler);
-		printf ("Testing chacha20 cryptobox for %d bytes for 3 seconds: ",
-				tr[i].bsize);
-		tr[i].cycles_box_chacha = test_crypto_secretbox_time (tr[i].bsize, 3);
+		printf ("Testing chacha20 cryptobox for %d bytes for %d seconds: ",
+				tr[i].bsize, seconds);
+		tr[i].cycles_box_chacha = test_crypto_secretbox_time (tr[i].bsize, seconds);
 		printf ("%ld operations\n", tr[i].cycles_box_chacha);
 	}
 	printf ("\n");
 	for (i = 0; i < sizeof(tr) / sizeof (tr[0]); i ++) {
 		signal (SIGALRM, alrm_handler);
-		printf ("Testing salsa20 cryptobox for %d bytes for 3 seconds: ",
-				tr[i].bsize);
-		tr[i].cycles_box_salsa = test_crypto_secretbox_salsa_time (tr[i].bsize, 3);
+		printf ("Testing salsa20 cryptobox for %d bytes for %d seconds: ",
+				tr[i].bsize, seconds);
+		tr[i].cycles_box_salsa = test_crypto_secretbox_salsa_time (tr[i].bsize, seconds);
 		printf ("%ld operations\n", tr[i].cycles_box_salsa);
+	}
+
+	printf ("\nSummary:\n");
+	printf ("%15s | %20s | %20s\n", "Block size", "Chacha20", "Salsa20");
+	printf ("\n");
+
+	for (i = 0; i < sizeof(tr) / sizeof (tr[0]); i ++) {
+		printf ("%15d | %20ld | %20ld\n", tr[i].bsize,
+				tr[i].cycles_box_chacha * tr[i].bsize / seconds,
+				tr[i].cycles_box_salsa * tr[i].bsize / seconds);
 	}
 
 	return 0;
