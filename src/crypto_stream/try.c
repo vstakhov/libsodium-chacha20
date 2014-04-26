@@ -177,7 +177,7 @@ const char *chacha20_checksum_compute (void)
 
 		for (j = 0; j < mlen; ++j)
 			if ((s[j] ^ m[j]) != c[j])
-				return "crypto_stream_xor does not match crypto_stream";
+				return "crypto_stream_xor does not match crypto_stream (1)";
 
 		for (j = 0; j < clen; ++j)
 			k[j % klen] ^= c[j];
@@ -185,7 +185,7 @@ const char *chacha20_checksum_compute (void)
 		crypto_stream (s, slen, n, k);
 		for (j = 0; j < mlen; ++j)
 			if ((s[j] ^ m[j]) != c[j])
-				return "crypto_stream_xor does not match crypto_stream";
+				return "crypto_stream_xor does not match crypto_stream (2)";
 		for (j = 0; j < mlen; ++j)
 			n[j % nlen] ^= m[j];
 		m[mlen] = 0;
