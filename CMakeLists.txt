@@ -4,6 +4,8 @@ SET(VERSION "0.0.1")
 
 CMAKE_MINIMUM_REQUIRED(VERSION 2.6.0 FATAL_ERROR)
 
+OPTION(VECTORIZE          "Use vectorized version of chacha20 [default: ON]"                  ON)
+
 FIND_LIBRARY(LIBSODIUM NAMES sodium PATH_SUFFIXES lib64 lib
 	                  PATHS
 	                      ~/Library/Frameworks
@@ -32,8 +34,15 @@ LINK_DIRECTORIES("${LIBSODIUM_PATH}")
 
 INCLUDE_DIRECTORIES("${CMAKE_SOURCE_DIR}/include")
 
-SET(LIBSRC src/crypto_stream/chacha20/ref/chacha.c
-		   src/crypto_stream/chacha20/ref/stream_chacha20_ref.c
+IF(VECTORIZE MATCHES "ON")
+	SET(LIBSRC src/crypto_stream/chacha20/krovetz/stream_chacha20_krovetz.c)
+	SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mssse3")
+ELSE()
+	SET(LIBSRC src/crypto_stream/chacha20/ref/chacha.c
+		   src/crypto_stream/chacha20/ref/stream_chacha20_ref.c)
+ENDIF()
+
+SET(LIBSRC "${LIBSRC}"
 		   src/crypto_stream/chacha20/stream_chacha20_api.c
 		   src/crypto_stream/try.c
 		   src/crypto_secretbox/chacha20poly1305/secretbox_chacha20poly1305_api.c

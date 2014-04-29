@@ -107,8 +107,8 @@ test_crypto_secretbox (void)
 static long
 test_crypto_secretbox_time (int blen, int seconds)
 {
-	unsigned char k[crypto_stream_chacha20_KEYBYTES];
-	unsigned char n[crypto_stream_chacha20_NONCEBYTES];
+	__attribute__ ((aligned (16))) unsigned char k[crypto_stream_chacha20_KEYBYTES];
+	__attribute__ ((aligned (16))) unsigned char n[crypto_stream_chacha20_NONCEBYTES];
 	unsigned char *c, *m;
 	long cycles = 0;
 	int64_t *nn;
@@ -141,8 +141,8 @@ test_crypto_secretbox_time (int blen, int seconds)
 static long
 test_crypto_secretbox_salsa_time (int blen, int seconds)
 {
-	unsigned char k[crypto_secretbox_KEYBYTES];
-	unsigned char n[crypto_secretbox_NONCEBYTES];
+	__attribute__ ((aligned (16))) unsigned char k[crypto_secretbox_KEYBYTES];
+	__attribute__ ((aligned (16))) unsigned char n[crypto_secretbox_NONCEBYTES];
 	unsigned char *c, *m;
 	int64_t *nn;
 	long cycles = 0;
