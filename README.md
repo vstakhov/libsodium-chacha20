@@ -24,3 +24,22 @@ Hardware used:
 Intel(R) Core(TM) i7-3630QM CPU @ 2.40GHz
 
 Chacha implementation: reference (without optimizations).
+
+Here is another benchmark result provided by Roman Timofeev:
+
+~~~
+     Block size |             Chacha20 |              Salsa20
+
+             32 |             57646240 |             25184192
+             64 |            110266794 |             41375125
+            128 |            150549760 |             69475370
+            512 |            259458389 |            177806677
+           1024 |            301762560 |            228260181
+           4096 |            330050218 |            289914880
+           8192 |            334618624 |            303658325
+          32768 |            339487402 |            313786368
+          65536 |            340830890 |            315555840
+~~~
+
+Hardware used: Intel Core™ i7-3770
+Chacha implementation: krovetz (sse3 vectorizing).
